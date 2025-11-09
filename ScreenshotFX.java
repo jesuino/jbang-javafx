@@ -24,11 +24,11 @@ import java.util.concurrent.atomic.AtomicReference;
 // On Fedora you must run with the following system properties:
 // jbang -Dawt.robot.screenshotDebug=true -Dawt.robot.screenshotMethod=dbusScreencast ScreenshotFX.java 
 
-
 public class ScreenshotFX extends Application {
 
     private static final double APP_WIDTH = 400;
     private static final double APP_HEIGHT = 300;
+    private final Robot robot = new Robot();
 
     public static void main(String[] args) {
         launch();
@@ -45,12 +45,12 @@ public class ScreenshotFX extends Application {
 
         var dimensions = Toolkit.getDefaultToolkit().getScreenSize();
         var captureWindow = new Stage();
-        captureWindow.initOwner(stage);
-
-        captureWindow.initStyle(StageStyle.TRANSPARENT);
         var dragRect = new Rectangle();
+        var captureRoot = new AnchorPane(dragRect);
+
+        captureWindow.initOwner(stage);
+        captureWindow.initStyle(StageStyle.TRANSPARENT);
         dragRect.setVisible(false);
-        var captureRoot = new AnchorPane(dragRect);        
         captureRoot.setCursor(Cursor.CROSSHAIR);
         captureRoot.setPrefSize(dimensions.getWidth(), dimensions.getHeight());
         captureWindow.setScene(new Scene(captureRoot,
@@ -60,12 +60,8 @@ public class ScreenshotFX extends Application {
         var initX = new AtomicReference<Double>();
         var initY = new AtomicReference<Double>();
 
-
-        captureWindow.setOnShown(e -> {
-            captureRoot.setOpacity(0.3);
-        });
-        captureRoot.setOnMousePressed(e -> {
-            captureRoot.setOpacity(0.3);
+        captureWindow.setOnShown(e -> captureRoot.setOpacity(0.3));
+        captureRoot.setOnMousePressed(e -> {            
             initX.set(e.getScreenX());
             initY.set(e.getScreenY());
         });
@@ -105,12 +101,11 @@ public class ScreenshotFX extends Application {
         btnCapture.setOnAction(e -> {
             stage.hide();
             captureWindow.show();
+            captureWindow.requestFocus();
         });
-
     }
 
     private ScrollPane capture(double x, double y, double width, double height) {
-        var robot = new Robot();
         var writableImage = robot.getScreenCapture(null, x, y, width, height);
         return new ScrollPane(new ImageView(writableImage));
     }
